@@ -1,16 +1,21 @@
 ```dockerfile
-# Use Java 17
+# Build stage
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Run stage
 FROM eclipse-temurin:17-jdk-alpine
 
-# Set working directory
 WORKDIR /app
+COPY --from=build /app/target/reviewin-backend-1.0.0.jar app.jar
 
-# Copy all files
-COPY . .
+EXPOSE 8080
 
-# Build the project
-RUN ./mvnw clean package -DskipTests
-
-# Run the jar
-CMD ["java", "-jar", "target/reviewin-backend-1.0.0.jar"]
+CMD ["java", "-jar", "app.jar"]
 ```
